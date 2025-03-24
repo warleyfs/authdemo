@@ -4,6 +4,7 @@ using AuthorizationServer.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuthorizationServer.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250322215031_AddUserSessions")]
+    partial class AddUserSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,9 +194,6 @@ namespace AuthorizationServer.API.Migrations
 
             modelBuilder.Entity("AuthorizationServer.API.Models.UserSession", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -210,15 +210,11 @@ namespace AuthorizationServer.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id", "UserId", "KeyId", "ClientId");
+                    b.HasKey("UserId", "KeyId", "ClientId");
 
                     b.HasIndex("ClientId");
 
                     b.HasIndex("KeyId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex(new[] { "Expires" }, "IX_Unique_Expires");
 
                     b.ToTable("UserSessions");
                 });

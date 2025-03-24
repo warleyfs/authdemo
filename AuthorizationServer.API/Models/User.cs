@@ -21,5 +21,9 @@ public class User
     [StringLength(100)]
     public string Password { get; set; }
     
-    public ICollection<UserRole> UserRoles { get; set; } // Navigation property for many-to-many relationship with Role
+    // Navigation property for many-to-many relationship with Role
+    public ICollection<UserRole> UserRoles { get; set; } 
+    
+    // Navigation property for many-to-many relationship with UserSessions
+    public ICollection<UserSession> UserSessions { get; set; } 
 }

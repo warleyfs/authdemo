@@ -31,4 +31,7 @@ public class SigningKey
     // Date when the key is set to expire.
     [Required]
     public DateTime ExpiresAt { get; set; }
+    
+    // Navigation property for many-to-many relationship with UserSessions
+    public ICollection<UserSession> UserSessions { get; set; }
 }

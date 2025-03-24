@@ -15,7 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<UserRole>()
             .HasKey(ur => new { ur.UserId, ur.RoleId }); // Composite primary key.
         
-        //Defines the many-to-many relationship between User and Role.
+        // Defines the many-to-many relationship between User and Role.
         modelBuilder.Entity<UserRole>()
             .HasOne(ur => ur.User)
             .WithMany(u => u.UserRoles)
@@ -25,6 +25,31 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(ur => ur.Role)
             .WithMany(r => r.UserRoles)
             .HasForeignKey(ur => ur.RoleId);
+        
+        // Configure the UserSession entity as a join table for User, SignKey and Client.
+        modelBuilder.Entity<UserSession>()
+            .HasKey(us => new { us.UserId, us.KeyId, us.ClientId }); // Composite primary key.
+        
+        modelBuilder.Entity<UserSession>()
+            .HasKey(us => new { us.Id, us.UserId, us.KeyId, us.ClientId });
+        
+        // Defines the one-to-many relationship between User and UserSession.
+        modelBuilder.Entity<UserSession>()
+            .HasOne(us => us.User)
+            .WithMany(u => u.UserSessions)
+            .HasForeignKey(us => us.UserId);
+        
+        // Defines the one-to-many relationship between SigningKey and UserSession.
+        modelBuilder.Entity<UserSession>()
+            .HasOne(us => us.Key)
+            .WithMany(u => u.UserSessions)
+            .HasForeignKey(us => us.KeyId);
+        
+        // Defines the one-to-many relationship between Client and UserSession.
+        modelBuilder.Entity<UserSession>()
+            .HasOne(us => us.Client)
+            .WithMany(u => u.UserSessions)
+            .HasForeignKey(us => us.ClientId);
         
         // Seed initial data for Roles, Users, Clients, and UserRoles.
         modelBuilder.Entity<Role>().HasData(
@@ -65,4 +90,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     // DbSet representing the SigningKeys table.
     public DbSet<SigningKey> SigningKeys { get; set; }
+    
+    // DbSet representing the User Sessions table.
+    public DbSet<UserSession> UserSessions { get; set; }
 }

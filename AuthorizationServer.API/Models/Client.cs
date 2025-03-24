@@ -21,4 +21,7 @@ public class Client
     [Required]
     [MaxLength(200)]
     public string ClientURL { get; set; }
+    
+    // Navigation property for many-to-many relationship with UserSessions
+    public ICollection<UserSession> UserSessions { get; set; }
 }

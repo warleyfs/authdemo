@@ -69,8 +69,23 @@ public class AuthController(IConfiguration configuration, ApplicationDbContext c
         return Ok(new { Token = token });
     }
 
+    [HttpPost("Introspection")]
+    public async Task<IActionResult> Introspect([FromForm] IntrospectDTO introspectDto)
+    {
+        // Validate the incoming model based on data annotations in LoginDTO
+        if (!ModelState.IsValid)
+        {
+            // If the model is invalid, return a 400 Bad Request with validation errors
+            return BadRequest(ModelState);
+        }
+
+        var response = IntrospectToken(introspectDto.Token);
+        
+        return Ok(response);
+    }
+
     // Private method responsible for generating a JWT token for an authenticated user
-    private string GenerateJwtToken(User user, Client client)
+    private async Task<string> GenerateJwtToken(User user, Client client)
     {
         // Retrieve the active signing key from the SigningKeys table
         var signingKey = context.SigningKeys.FirstOrDefault(k => k.IsActive);
@@ -136,7 +151,75 @@ public class AuthController(IConfiguration configuration, ApplicationDbContext c
         // Serialize the token to a string
         var token = tokenHandler.WriteToken(tokenDescriptor);
         
+        // Save user session
+        context.UserSessions.Add(new UserSession
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            ClientId = client.Id,
+            KeyId = signingKey.Id,
+            Token = token,
+            Expires = DateTime.UtcNow.AddHours(1)
+        });
+        
+        await context.SaveChangesAsync();
+        
         // Return the serialized JWT token
         return token;
+    }
+
+    // Private method responsible for JWT token instropection as a validation method
+    private object IntrospectToken(string token)
+    {
+        // Retrieve the active signing key from the SigningKeys table
+        var signingKey = context.SigningKeys.FirstOrDefault(k => k.IsActive);
+        
+        // If no active signing key is found, throw an exception
+        if (signingKey == null)
+        {
+            throw new Exception("No active signing key available.");
+        }
+
+        // Convert the Base64-encoded private key string back to a byte array
+        var privateKeyBytes = Convert.FromBase64String(signingKey.PrivateKey);
+        
+        // Create a new RSA instance for cryptographic operations
+        var rsa = RSA.Create();
+        
+        // Import the RSA private key into the RSA instance
+        rsa.ImportRSAPrivateKey(privateKeyBytes, out _);
+        
+        // Create a new RsaSecurityKey using the RSA instance
+        var rsaSecurityKey = new RsaSecurityKey(rsa)
+        {
+            // Assign the Key ID to link the JWT with the correct public key
+            KeyId = signingKey.KeyId
+        };
+        
+        var tokenHandler = new JwtSecurityTokenHandler();
+        tokenHandler.ReadToken(token);
+        tokenHandler.ValidateToken(token, new TokenValidationParameters
+        {
+            // Issuer
+            ValidateIssuer = true,
+            ValidIssuer = configuration["Jwt:Issuer"],
+            
+            // Audience
+            ValidateAudience = false,
+            
+            // Lifetime
+            ValidateLifetime = true,
+            
+            // Issuer Signing Key
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = rsaSecurityKey
+        }, out var validatedToken);
+
+        if (validatedToken is not JwtSecurityToken jwtSecurityToken)
+        {
+            throw new SecurityTokenException("Invalid token");
+        }
+        
+        return new { active = true };
     }
 }

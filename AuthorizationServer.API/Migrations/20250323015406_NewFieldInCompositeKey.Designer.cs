@@ -4,6 +4,7 @@ using AuthorizationServer.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuthorizationServer.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250323015406_NewFieldInCompositeKey")]
+    partial class NewFieldInCompositeKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,9 +194,6 @@ namespace AuthorizationServer.API.Migrations
 
             modelBuilder.Entity("AuthorizationServer.API.Models.UserSession", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -206,17 +206,18 @@ namespace AuthorizationServer.API.Migrations
                     b.Property<DateTime?>("Expires")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id", "UserId", "KeyId", "ClientId");
+                    b.HasKey("UserId", "KeyId", "ClientId");
 
                     b.HasIndex("ClientId");
 
                     b.HasIndex("KeyId");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex(new[] { "Expires" }, "IX_Unique_Expires");
 
