@@ -7,6 +7,12 @@
 #      context: .
 #      dockerfile: AuthorizationServer.API/Dockerfile
   
+#  resourceserver.api:
+#    image: resourceserver.api
+#    build:
+#      context: .
+#      dockerfile: ResourceServer.API/Dockerfile
+      
   sqlserver:
     image: mcr.microsoft.com/mssql/server
     environment:
@@ -15,3 +21,4 @@
       MSSQL_PID: "Developer"
     ports:
       - "1433:1433"
+  
